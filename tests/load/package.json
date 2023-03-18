@@ -1,0 +1,11 @@
+{
+  "name": "aws-agw-integration-load-testing",
+  "version": "1.0.0",
+  "scripts": {
+    "perf": "artillery run config.yaml --output report.json",
+    "report": "artillery report --output report.html report.json"
+  },
+  "devDependencies": {
+    "artillery": "^2.0.0-30"
+  }
+}

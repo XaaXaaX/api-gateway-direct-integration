@@ -1,0 +1,52 @@
+name: instant.io control plane pipeline
+
+on:
+  push:
+    branches: [ main ]
+      
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: eu-west-1
+
+jobs:
+
+  constinuous_deployment:
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3 
+
+    - name: Build App
+      run: | 
+        cd src && npm i \
+        && npm run build
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+  
+    - name: Build App Infra as Code
+      run: |
+        cd aws/cdk/app && npm i \
+        && npm run build
+    
+    - name: Deploy Application
+      run: |
+        cd aws/cdk/app \
+         && npm install \
+         && npx cdk deploy --require-approval never \
+          --context application=aws-agw-integration \
+          --context environemnt=dev \
+          --context scope=app
+
+    - name: Load Test
+      run: |
+        cd tests/load && npm i \
+        && npm run perf

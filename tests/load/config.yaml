@@ -1,0 +1,22 @@
+config:
+  target: "https://aheuqh2aw7.execute-api.eu-west-1.amazonaws.com/live"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: Warm up
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 50
+      name: Ramp up load
+    - duration: 120
+      arrivalRate: 500
+      name: Sustained load
+scenarios:
+  - flow:
+    - post:
+        url: "/sqs"
+        json:
+          letter: "A"
+        capture:
+          - json: "$.done"
+            as: "result"
