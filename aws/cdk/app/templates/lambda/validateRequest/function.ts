@@ -6,13 +6,14 @@ interface ValidateRequestFunctionStackProps extends SharedProps, NestedStackProp
 
 class ValidateRequestFunctionStack extends NestedStack {
     public readonly Function : IndexFunction;
-    constructor(scope: Construct, id: string, props?: ValidateRequestFunctionStackProps) {
+    constructor(scope: Construct, id: string, props: ValidateRequestFunctionStackProps) {
         super(scope, id, props);
 
         this.Function =  new IndexFunction(
             this, 
             IndexFunction.name,
             { 
+                stackContext: props.stackContext,
                 lambdaContext: "validateRequest",
                 functionPath: 'validateRequest/index.ts', 
                 functionProps:{

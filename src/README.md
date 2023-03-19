@@ -1,4 +1,4 @@
-# instant-io Control plane Api
+# api-gateway-direct-integration!
 
 ## App code Scaffolding
 

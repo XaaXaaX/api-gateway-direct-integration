@@ -25,9 +25,9 @@ class AppStack extends Stack {
             dynamodbTable: table.Table
         });
 
-        new CfnOutput(this, "TopicArn", { 
-            value: topic.topicArn,
-            exportName: `${id}-TopicArn`
+        new CfnOutput(this, "ApiEndpoint", { 
+            value: api.Api.url,
+            exportName: `${id}-ApiEndpoint`
         });
     }
 }

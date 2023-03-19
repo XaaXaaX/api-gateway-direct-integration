@@ -1,4 +1,4 @@
-name: instant.io control plane pipeline
+name: pipeline
 
 on:
   push:
@@ -9,6 +9,9 @@ on:
 
 env:
   AWS_REGION: eu-west-1
+  APPLICATION: aws-agw-integration
+  ENV: dev
+  SCOPE: app
 
 jobs:
 
@@ -42,11 +45,34 @@ jobs:
         cd aws/cdk/app \
          && npm install \
          && npx cdk deploy --require-approval never \
-          --context application=aws-agw-integration \
-          --context environemnt=dev \
-          --context scope=app
+          --context application=${{ env.APPLICATION }} \
+          --context environemnt=${{ env.ENV }} \
+          --context scope=${{ env.SCOPE }}
+
+    - name: Get Outputs
+      run: |
+        aws cloudformation describe-stacks \
+        --stack-name ${{ env.APPLICATION }}-${{ env.ENV }}-${{ env.SCOPE }} \
+        --output text --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue'
+
+    - name: Set Env Vars from Outputs
+      run: |
+        echo "API_ENDPOINT=$(aws cloudformation describe-stacks \
+        --stack-name ${{ env.APPLICATION }}-${{ env.ENV }}-${{ env.SCOPE }} \
+        --output text --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue')" >> $GITHUB_ENV
 
     - name: Load Test
       run: |
         cd tests/load && npm i \
         && npm run perf
+
+    - name: Generate HTML report
+      run: |
+        cd tests/load && npm i \
+        && npm run report
+
+    - name: Archive test report
+      uses: actions/upload-artifact@v2
+      with:
+        name: artillery-test-report
+        path: tests/load/report.html

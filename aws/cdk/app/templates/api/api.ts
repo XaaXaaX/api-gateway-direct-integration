@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
 import { NestedStack, NestedStackProps } from "aws-cdk-lib";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { AccessLogFormat, EndpointType, LogGroupLogDestination, MethodLoggingLevel, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { AccessLogFormat, EndpointType, LambdaIntegration, LogGroupLogDestination, MethodLoggingLevel, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
 import { IQueue } from "aws-cdk-lib/aws-sqs";
 import { ITopic } from "aws-cdk-lib/aws-sns";
@@ -120,6 +120,12 @@ class ApiStack extends NestedStack {
             sqsIntegration.integration,
             { methodResponses: [{ statusCode: "200" }] }
             );
+        
+        const lambdaProxyIntegration = new LambdaIntegration(props.validateRequet);
+        const lambdaApiResource = this.Api.root.addResource('lambda');
+        lambdaApiResource.addMethod(
+            'POST', 
+            lambdaProxyIntegration);
     }
 }
 
