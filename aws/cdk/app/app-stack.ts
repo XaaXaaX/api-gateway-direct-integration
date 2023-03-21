@@ -6,9 +6,9 @@ const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
   region: process.env.CDK_DEFAULT_REGION,
 };
-const application = app.node.tryGetContext("application") ?? 'aws-agw-integration';
-const environment = app.node.tryGetContext("environment") ?? "dev";
-const scope = app.node.tryGetContext("scope") ?? "app";
+const application = app.node.tryGetContext("application");
+const environment = app.node.tryGetContext("environment");
+const scope = app.node.tryGetContext("scope");
 
 const stackContext = `${application}-${environment}`;
 const resourceBaseId = `${stackContext}-${scope}`;

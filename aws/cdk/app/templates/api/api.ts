@@ -8,7 +8,8 @@ import { ITopic } from "aws-cdk-lib/aws-sns";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { SQSApiGatewayIntegration } from "../lib/apiGatewayIntegrations/sqs/sqs-integration";
-import { SharedProps } from "templates/lib/shared-props";
+import { SharedProps } from "../lib/shared-props";
+import { SNSGatewayIntegration } from "../lib/apiGatewayIntegrations/sns/sns-integration";
 
 interface ApiStackProps extends SharedProps, NestedStackProps { 
     validateRequet: IFunction,
@@ -54,72 +55,28 @@ class ApiStack extends NestedStack {
             }
         );
 
-		props?.snsTopic.grantPublish(integrationRole);
-
-		// const publishIntegration = new AwsIntegration({
-		// 	service: 'sns',
-		// 	path:  `/sns`,
-		// 	integrationHttpMethod: 'POST',
-		// 	options: {
-		// 	  credentialsRole: integrationRole,
-		// 	  passthroughBehavior: PassthroughBehavior.NEVER,
-		// 	  requestParameters: {
-		// 		'integration.request.header.Content-Type': "'application/x-www-form-urlencoded'"
-		// 	  },
-		// 	  requestTemplates: {
-		// 		'application/json': `Action=Publish&TopicArn=$util.urlEncode(\'${props?.snsTopic.topicArn}\')`,
-		// 	  },
-		// 	  integrationResponses: [
-        //         {
-        //           statusCode: '200',
-        //         },
-        //         {
-        //           statusCode: '400',
-        //         },
-        //         {
-        //           statusCode: '500',
-        //         }
-        //       ]
-		// }});
-
-		// props?.dynamodbTable.grantWriteData(integrationRole);
-		// const putItemIntegration = new AwsIntegration({
-		// 	action: 'PutItem',
-		// 	options: {
-		// 	  credentialsRole: integrationRole,
-		// 	  integrationResponses: [
-		// 		{
-		// 		  statusCode: '200',
-		// 		  responseTemplates: {
-		// 			'application/json': `{
-		// 			  "requestId": "$context.requestId"
-		// 			}`,
-		// 		  },
-		// 		}
-		// 	  ],
-		// 	  requestTemplates: {
-		// 		'application/json': `{
-		// 			"Item": {
-		// 			  "Id": {
-		// 				"S": "$context.requestId"
-		// 			  },
-		// 			  "letter": {
-		// 				"S": "$input.path('$.letter')"
-		// 			  }
-		// 			},
-		// 			"TableName": "${props?.dynamodbTable.tableName}"
-		// 		  }`
-		// 	  },
-		// 	},
-		// 	service: 'dynamodb',
-		// });
+		const snsIntegration = new SNSGatewayIntegration(
+            this,
+            SNSGatewayIntegration.name,
+            {
+                topic: props.snsTopic,
+                integrationRole: integrationRole,
+            }
+        );
 
         const sqsApiResource = this.Api.root.addResource('sqs');
         sqsApiResource.addMethod(
             'POST', 
             sqsIntegration.integration,
             { methodResponses: [{ statusCode: "200" }] }
-            );
+        );
+        
+        const snsApiResource = this.Api.root.addResource('sns');
+        snsApiResource.addMethod(
+            'POST', 
+            snsIntegration.integration,
+            { methodResponses: [{ statusCode: "200" }] }
+        );
         
         const lambdaProxyIntegration = new LambdaIntegration(props.validateRequet);
         const lambdaApiResource = this.Api.root.addResource('lambda');

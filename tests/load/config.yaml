@@ -25,15 +25,15 @@ scenarios:
           url: "/sns"
           json:
             letter: "A"
-      - post:
-          url: "/sfn"
-          json:
-            letter: "A"
-      - post:
-          url: "/eb"
-          json:
-            letter: "A"
-      - post:
-          url: "/ddb"
-          json:
-            letter: "A"
+      # - post:
+      #     url: "/sfn"
+      #     json:
+      #       letter: "A"
+      # - post:
+      #     url: "/eb"
+      #     json:
+      #       letter: "A"
+      # - post:
+      #     url: "/ddb"
+      #     json:
+      #       letter: "A"

@@ -1,5 +1,7 @@
 {
   "application": "aws-agw-integration",
+  "environment": "dev",
+  "scope": "app",
   "local": {},
   "dev": {},
   "stage": {},
