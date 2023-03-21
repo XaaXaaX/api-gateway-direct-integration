@@ -10,6 +10,7 @@ import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { SQSApiGatewayIntegration } from "../lib/apiGatewayIntegrations/sqs/sqs-integration";
 import { SharedProps } from "../lib/shared-props";
 import { SNSGatewayIntegration } from "../lib/apiGatewayIntegrations/sns/sns-integration";
+import { DynamoDbGatewayIntegration } from "../lib/apiGatewayIntegrations/dynamodb/ddb-integration";
 
 interface ApiStackProps extends SharedProps, NestedStackProps { 
     validateRequet: IFunction,
@@ -20,6 +21,8 @@ interface ApiStackProps extends SharedProps, NestedStackProps {
 
 class ApiStack extends NestedStack {
     public readonly Api: RestApi;
+
+    private readonly methodResponse = { methodResponses: [{ statusCode: "200" }] };
 
     constructor(scope: Construct, id: string, props: ApiStackProps) {
         super(scope, id, props);
@@ -45,7 +48,6 @@ class ApiStack extends NestedStack {
                 },
             });
 
-		props?.sqsQueue.grantSendMessages(integrationRole);
         const sqsIntegration = new SQSApiGatewayIntegration(
             this,
             SQSApiGatewayIntegration.name,
@@ -64,20 +66,36 @@ class ApiStack extends NestedStack {
             }
         );
 
+        const ddbIntegration = new DynamoDbGatewayIntegration(
+            this,
+            DynamoDbGatewayIntegration.name,
+            {
+                table: props.dynamodbTable,
+                integrationRole: integrationRole,
+            }
+        );
+
         const sqsApiResource = this.Api.root.addResource('sqs');
         sqsApiResource.addMethod(
             'POST', 
             sqsIntegration.integration,
-            { methodResponses: [{ statusCode: "200" }] }
+            this.methodResponse
         );
         
         const snsApiResource = this.Api.root.addResource('sns');
         snsApiResource.addMethod(
             'POST', 
             snsIntegration.integration,
-            { methodResponses: [{ statusCode: "200" }] }
+            this.methodResponse
         );
         
+        const ddbApiResource = this.Api.root.addResource('ddb');
+        ddbApiResource.addMethod(
+            'POST', 
+            ddbIntegration.integration,
+            this.methodResponse
+        );
+
         const lambdaProxyIntegration = new LambdaIntegration(props.validateRequet);
         const lambdaApiResource = this.Api.root.addResource('lambda');
         lambdaApiResource.addMethod(

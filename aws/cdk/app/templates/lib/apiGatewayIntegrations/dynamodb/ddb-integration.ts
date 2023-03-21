@@ -1,8 +1,6 @@
 
-import { Stack } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { AwsIntegration, IntegrationOptions, IntegrationResponse, PassthroughBehavior } from "aws-cdk-lib/aws-apigateway";
-import { IQueue } from "aws-cdk-lib/aws-sqs";
+import { AwsIntegration } from "aws-cdk-lib/aws-apigateway";
 import { IRole } from "aws-cdk-lib/aws-iam";
 import { ITable } from "aws-cdk-lib/aws-dynamodb";
 
