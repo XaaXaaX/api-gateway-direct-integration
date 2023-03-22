@@ -8,7 +8,7 @@ config:
       arrivalRate: 10
       rampTo: 100
       name: Ramp up load
-    - duration: 120
+    - duration: 60
       arrivalRate: 20000
       name: Sustained load
 scenarios:
@@ -29,11 +29,11 @@ scenarios:
           url: "/ddb"
           json:
             letter: "A"
-      # - post:
-      #     url: "/sfn"
-      #     json:
-      #       letter: "A"
-      # - post:
-      #     url: "/eb"
-      #     json:
-      #       letter: "A"
+      - post:
+          url: "/sfn"
+          json:
+            letter: "A"
+      - post:
+          url: "/eb"
+          json:
+            letter: "A"

@@ -15,7 +15,7 @@ export class DynamoDbGatewayIntegration extends Construct {
     super(scope, id);
 
         props?.table.grantWriteData(props.integrationRole);
-		const putItemIntegration = new AwsIntegration({
+		this.integration = new AwsIntegration({
 			action: 'PutItem',
 			options: {
 			  credentialsRole: props.integrationRole,
@@ -45,7 +45,5 @@ export class DynamoDbGatewayIntegration extends Construct {
 			},
 			service: 'dynamodb',
 		});
-
-		this.integration = putItemIntegration;
   }
 }

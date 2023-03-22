@@ -17,7 +17,7 @@ export class SNSGatewayIntegration extends Construct {
 
     props?.topic.grantPublish(props.integrationRole);
 
-    const publishIntegration = new AwsIntegration({
+    this.integration = new AwsIntegration({
     	service: 'sns',
     	path:  `/sns`,
     	integrationHttpMethod: 'POST',
@@ -42,8 +42,5 @@ export class SNSGatewayIntegration extends Construct {
             }
           ]
     }});
-
-    this.integration = publishIntegration;
-
   }
 }

@@ -11,12 +11,18 @@ import { SQSApiGatewayIntegration } from "../lib/apiGatewayIntegrations/sqs/sqs-
 import { SharedProps } from "../lib/shared-props";
 import { SNSGatewayIntegration } from "../lib/apiGatewayIntegrations/sns/sns-integration";
 import { DynamoDbGatewayIntegration } from "../lib/apiGatewayIntegrations/dynamodb/ddb-integration";
+import { IStateMachine } from "aws-cdk-lib/aws-stepfunctions";
+import { StepFuncGatewayIntegration } from "../lib/apiGatewayIntegrations/sfn/sfn-integration";
+import { EventBridgeGatewayIntegration } from "../lib/apiGatewayIntegrations/eb/eb-itegration";
+import { IEventBus } from "aws-cdk-lib/aws-events";
 
 interface ApiStackProps extends SharedProps, NestedStackProps { 
     validateRequet: IFunction,
     sqsQueue: IQueue,
     snsTopic: ITopic,
-    dynamodbTable: ITable
+    dynamodbTable: ITable,
+    stateMachine: IStateMachine,
+    eventBus: IEventBus
 }
 
 class ApiStack extends NestedStack {
@@ -27,7 +33,6 @@ class ApiStack extends NestedStack {
     constructor(scope: Construct, id: string, props: ApiStackProps) {
         super(scope, id, props);
 
-        const apiLogGroup = new LogGroup(this, 'ApiLogGroup', {  retention: RetentionDays.ONE_WEEK });
         const integrationRole = new Role(this, 'integration-role', { assumedBy: new ServicePrincipal('apigateway.amazonaws.com') });
 
         this.Api = new RestApi(
@@ -38,12 +43,6 @@ class ApiStack extends NestedStack {
                 endpointTypes: [EndpointType.REGIONAL],
                 cloudWatchRole: true,
                 deployOptions: {
-                    accessLogDestination: new LogGroupLogDestination(apiLogGroup),
-                    accessLogFormat: AccessLogFormat.jsonWithStandardFields(),
-                    loggingLevel: MethodLoggingLevel.INFO,
-                    metricsEnabled: true,
-                    tracingEnabled: true,
-                    dataTraceEnabled: false,
                     stageName: 'live'
                 },
             });
@@ -75,6 +74,24 @@ class ApiStack extends NestedStack {
             }
         );
 
+        const sfnIntegration =  new StepFuncGatewayIntegration(
+            this,
+            StepFuncGatewayIntegration.name, 
+            {
+                statemachine: props.stateMachine,
+                integrationRole: integrationRole
+            }
+        );
+
+        const ebIntegration =  new EventBridgeGatewayIntegration(
+            this,
+            EventBridgeGatewayIntegration.name, 
+            {
+                eventBus: props.eventBus,
+                integrationRole: integrationRole
+            }
+        );
+
         const sqsApiResource = this.Api.root.addResource('sqs');
         sqsApiResource.addMethod(
             'POST', 
@@ -95,6 +112,21 @@ class ApiStack extends NestedStack {
             ddbIntegration.integration,
             this.methodResponse
         );
+
+        const sfnApiResource = this.Api.root.addResource('sfn');
+        sfnApiResource.addMethod(
+            'POST', 
+            sfnIntegration.integration,
+            this.methodResponse
+        );
+
+        const ebApiResource = this.Api.root.addResource('eb');
+        ebApiResource.addMethod(
+            'POST', 
+            ebIntegration.integration,
+            this.methodResponse
+        );
+
 
         const lambdaProxyIntegration = new LambdaIntegration(props.validateRequet);
         const lambdaApiResource = this.Api.root.addResource('lambda');
